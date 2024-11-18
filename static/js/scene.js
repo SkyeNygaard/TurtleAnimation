@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class Scene {
     constructor() {
@@ -56,23 +55,38 @@ class Scene {
     }
 
     createTurtle() {
-        const loader = new GLTFLoader();
-        loader.load('/static/models/turtle.js', (gltf) => {
-            this.turtle = gltf.scene;
-            this.turtle.scale.set(0.5, 0.5, 0.5);
-            this.turtle.position.y = 2;
-            this.scene.add(this.turtle);
-            
-            document.getElementById('loading').style.display = 'none';
-            
-            // Add uncanny animation
-            this.mixer = new THREE.AnimationMixer(this.turtle);
-            const clip = THREE.AnimationClip.findByName(gltf.animations, 'swim');
-            if (clip) {
-                const action = this.mixer.clipAction(clip);
-                action.play();
-            }
+        // Create a simple turtle shape using basic geometries
+        const body = new THREE.BoxGeometry(2, 0.5, 3);
+        const bodyMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0x2d5a27,
+            shininess: 60,
+            specular: 0x116611
         });
+        this.turtle = new THREE.Mesh(body, bodyMaterial);
+
+        // Add head
+        const head = new THREE.BoxGeometry(0.8, 0.4, 0.6);
+        const headMesh = new THREE.Mesh(head, bodyMaterial);
+        headMesh.position.set(0, 0, 1.8);
+        this.turtle.add(headMesh);
+
+        // Add shell dome
+        const shell = new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const shellMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0x1a3a1a,
+            shininess: 30,
+            specular: 0x116611
+        });
+        const shellMesh = new THREE.Mesh(shell, shellMaterial);
+        shellMesh.position.set(0, 0.3, 0);
+        shellMesh.rotation.x = Math.PI;
+        this.turtle.add(shellMesh);
+
+        this.turtle.position.y = 2;
+        this.scene.add(this.turtle);
+
+        // Remove loading message
+        document.getElementById('loading').style.display = 'none';
     }
 
     animate() {
@@ -82,10 +96,6 @@ class Scene {
         
         if (this.water) {
             this.water.material.uniforms.time.value = time;
-        }
-        
-        if (this.mixer) {
-            this.mixer.update(0.016);
         }
         
         if (this.turtle) {
