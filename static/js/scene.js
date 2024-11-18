@@ -7,6 +7,7 @@ class Scene {
         this.setupLights();
         this.createWater();
         this.createTurtle();
+        this.createStickFigure();
         this.animate();
     }
 
@@ -89,6 +90,31 @@ class Scene {
         document.getElementById('loading').style.display = 'none';
     }
 
+    createStickFigure() {
+        const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+        
+        // Create stick figure geometry
+        const points = [];
+        points.push(new THREE.Vector3(0, 0, 0));     // Base
+        points.push(new THREE.Vector3(0, 1, 0));     // Body
+        points.push(new THREE.Vector3(-0.5, 0.7, 0)); // Left arm
+        points.push(new THREE.Vector3(0, 1, 0));     // Back to body
+        points.push(new THREE.Vector3(0.5, 0.7, 0));  // Right arm
+        points.push(new THREE.Vector3(0, 1, 0));     // Back to body
+        points.push(new THREE.Vector3(-0.3, -0.5, 0)); // Left leg
+        points.push(new THREE.Vector3(0, 0, 0));     // Back to base
+        points.push(new THREE.Vector3(0.3, -0.5, 0));  // Right leg
+        
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        this.stickFigure = new THREE.Line(geometry, material);
+        this.stickFigure.position.set(2, 3, 0);
+        this.scene.add(this.stickFigure);
+        
+        // Physics properties
+        this.stickFigureVelocity = new THREE.Vector3(0, 0, 0);
+        this.stickFigureAngularVel = 0;
+    }
+
     animate() {
         requestAnimationFrame(() => this.animate());
         
@@ -99,9 +125,46 @@ class Scene {
         }
         
         if (this.turtle) {
-            this.turtle.rotation.y = Math.sin(time * 0.5) * 0.3; // More rotation
-            this.turtle.position.y = 2 + Math.sin(time) * 0.5;   // More vertical movement
-            this.turtle.rotation.z = Math.sin(time * 0.7) * 0.1; // Add slight tilting
+            // Jerky movement - snap to new positions every few seconds
+            if (Math.floor(time) % 3 === 0 && !this.hasSnapped) {
+                this.turtle.position.x = (Math.random() - 0.5) * 10;
+                this.turtle.position.z = (Math.random() - 0.5) * 10;
+                this.hasSnapped = true;
+                
+                // Apply force to stick figure when turtle snaps
+                if (this.stickFigure) {
+                    this.stickFigureVelocity.y = 5;
+                    this.stickFigureVelocity.x = (Math.random() - 0.5) * 3;
+                    this.stickFigureAngularVel = (Math.random() - 0.5) * 10;
+                }
+            } else if (Math.floor(time) % 3 !== 0) {
+                this.hasSnapped = false;
+            }
+            
+            this.turtle.rotation.y = Math.sin(time * 0.5) * 0.3;
+            this.turtle.position.y = 2 + Math.sin(time) * 0.5;
+            this.turtle.rotation.z = Math.sin(time * 0.7) * 0.1;
+        }
+        
+        // Update stick figure physics
+        if (this.stickFigure) {
+            // Apply gravity
+            this.stickFigureVelocity.y -= 9.8 * 0.016; // gravity * deltaTime
+            
+            // Update position
+            this.stickFigure.position.x += this.stickFigureVelocity.x * 0.016;
+            this.stickFigure.position.y += this.stickFigureVelocity.y * 0.016;
+            
+            // Rotate stick figure
+            this.stickFigure.rotation.z += this.stickFigureAngularVel * 0.016;
+            
+            // Ground collision
+            if (this.stickFigure.position.y < 1) {
+                this.stickFigure.position.y = 1;
+                this.stickFigureVelocity.y = Math.abs(this.stickFigureVelocity.y) * 0.5;
+                this.stickFigureVelocity.x *= 0.8;
+                this.stickFigureAngularVel *= 0.8;
+            }
         }
         
         this.renderer.render(this.scene, this.camera);
