@@ -5,39 +5,40 @@ class AudioManager {
     }
 
     async setupAudio() {
-        // Create underwater ambience
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-        const filter = this.audioContext.createBiquadFilter();
+        // Original underwater ambience
+        const underwater = this.audioContext.createOscillator();
+        underwater.type = 'sine';
+        underwater.frequency.setValueAtTime(100, this.audioContext.currentTime);
         
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(100, this.audioContext.currentTime);
+        // Cursed singing oscillators
+        const singingOsc1 = this.audioContext.createOscillator();
+        const singingOsc2 = this.audioContext.createOscillator();
         
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(400, this.audioContext.currentTime);
+        singingOsc1.type = 'sawtooth';
+        singingOsc2.type = 'square';
         
-        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+        const singingGain = this.audioContext.createGain();
+        singingGain.gain.setValueAtTime(0.15, this.audioContext.currentTime);
         
-        oscillator.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
+        // Connect everything
+        underwater.connect(this.audioContext.destination);
+        singingOsc1.connect(singingGain);
+        singingOsc2.connect(singingGain);
+        singingGain.connect(this.audioContext.destination);
         
-        oscillator.start();
+        underwater.start();
+        singingOsc1.start();
+        singingOsc2.start();
         
-        // Modulate the sound for an eerie effect
-        this.modulateSound(oscillator, gainNode);
-    }
-
-    modulateSound(oscillator, gainNode) {
-        const lfoFreq = 0.1;
+        // Modulate the singing
         setInterval(() => {
             const time = this.audioContext.currentTime;
-            oscillator.frequency.setValueAtTime(
-                100 + Math.sin(time * lfoFreq) * 20,
+            singingOsc1.frequency.setValueAtTime(
+                300 + Math.sin(time * 0.5) * 100,
                 time
             );
-            gainNode.gain.setValueAtTime(
-                0.1 + Math.sin(time * lfoFreq * 0.5) * 0.05,
+            singingOsc2.frequency.setValueAtTime(
+                400 + Math.cos(time * 0.3) * 150,
                 time
             );
         }, 50);

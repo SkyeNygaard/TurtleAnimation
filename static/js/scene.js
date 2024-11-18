@@ -15,7 +15,7 @@ class Scene {
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setClearColor(0x000816);
+        this.renderer.setClearColor(0x001133);
         this.renderer.shadowMap.enabled = true;
         
         document.getElementById('scene-container').appendChild(this.renderer.domElement);
@@ -27,16 +27,16 @@ class Scene {
     }
 
     setupLights() {
-        const ambientLight = new THREE.AmbientLight(0x001133, 0.5);
+        const ambientLight = new THREE.AmbientLight(0x6644ff, 1.5);
         this.scene.add(ambientLight);
 
-        const moonLight = new THREE.DirectionalLight(0x3366ff, 1);
+        const moonLight = new THREE.DirectionalLight(0xff3366, 2);
         moonLight.position.set(5, 10, 2);
         moonLight.castShadow = true;
         this.scene.add(moonLight);
 
         // Add volumetric fog
-        this.scene.fog = new THREE.FogExp2(0x000816, 0.05);
+        this.scene.fog = new THREE.FogExp2(0x001133, 0.03);
     }
 
     createWater() {
@@ -46,7 +46,7 @@ class Scene {
             fragmentShader: document.getElementById('waterFragmentShader').textContent,
             uniforms: {
                 time: { value: 0 },
-                distortionScale: { value: 3.0 }
+                distortionScale: { value: 5.0 }
             }
         });
         this.water = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -58,9 +58,9 @@ class Scene {
         // Create a simple turtle shape using basic geometries
         const body = new THREE.BoxGeometry(2, 0.5, 3);
         const bodyMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x2d5a27,
-            shininess: 60,
-            specular: 0x116611
+            color: 0x00ff66,  // Bright toxic green
+            shininess: 100,
+            specular: 0x66ff00
         });
         this.turtle = new THREE.Mesh(body, bodyMaterial);
 
@@ -73,9 +73,9 @@ class Scene {
         // Add shell dome
         const shell = new THREE.SphereGeometry(1.2, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
         const shellMaterial = new THREE.MeshPhongMaterial({ 
-            color: 0x1a3a1a,
-            shininess: 30,
-            specular: 0x116611
+            color: 0xff3366,  // Neon pink
+            shininess: 80,
+            specular: 0xff00ff
         });
         const shellMesh = new THREE.Mesh(shell, shellMaterial);
         shellMesh.position.set(0, 0.3, 0);
@@ -99,8 +99,9 @@ class Scene {
         }
         
         if (this.turtle) {
-            this.turtle.rotation.y = Math.sin(time * 0.5) * 0.1;
-            this.turtle.position.y = 2 + Math.sin(time) * 0.2;
+            this.turtle.rotation.y = Math.sin(time * 0.5) * 0.3; // More rotation
+            this.turtle.position.y = 2 + Math.sin(time) * 0.5;   // More vertical movement
+            this.turtle.rotation.z = Math.sin(time * 0.7) * 0.1; // Add slight tilting
         }
         
         this.renderer.render(this.scene, this.camera);
