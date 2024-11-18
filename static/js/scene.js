@@ -68,6 +68,24 @@ class Scene {
         this.scene.add(pointLight2);
     }
 
+    createWater() {
+        const waterGeometry = new THREE.PlaneGeometry(100, 100, 32, 32);
+        
+        const waterMaterial = new THREE.ShaderMaterial({
+            vertexShader: document.getElementById('waterVertexShader').textContent,
+            fragmentShader: document.getElementById('waterFragmentShader').textContent,
+            transparent: true,
+            uniforms: {
+                time: { value: 0 }
+            }
+        });
+        
+        this.water = new THREE.Mesh(waterGeometry, waterMaterial);
+        this.water.rotation.x = -Math.PI / 2;
+        this.water.position.y = 0;
+        this.scene.add(this.water);
+    }
+
     createEnvironment() {
         // Add floating debris
         for(let i = 0; i < 50; i++) {
