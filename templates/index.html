@@ -18,7 +18,44 @@
 <body>
     <div id="scene-container"></div>
     <div id="loading">Loading...</div>
-    
+
+    <script type="x-shader/x-vertex" id="waterVertexShader">
+        varying vec2 vUv;
+        uniform float time;
+        
+        void main() {
+            vUv = uv;
+            vec3 pos = position;
+            
+            float amp = 0.5;
+            float freq = 0.5;
+            pos.y += sin(pos.x * freq + time) * amp;
+            pos.y += sin(pos.z * freq + time) * amp;
+            
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="waterFragmentShader">
+        uniform float time;
+        varying vec2 vUv;
+        
+        void main() {
+            vec2 uv = vUv;
+            
+            float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+            
+            vec3 waterColor = vec3(0.0, 0.1, 0.2);
+            vec3 murkColor = vec3(0.05, 0.07, 0.1);
+            
+            float murk = smoothstep(0.0, 1.0, noise + sin(time * 0.5) * 0.5);
+            vec3 finalColor = mix(waterColor, murkColor, murk);
+            
+            gl_FragColor = vec4(finalColor, 0.9);
+        }
+    </script>
+
+    <!-- Move script tags after shader definitions -->
     <script type="module" src="{{ url_for('static', filename='js/scene.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/audio.js') }}"></script>
 </body>
